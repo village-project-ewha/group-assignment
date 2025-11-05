@@ -1,8 +1,10 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, flash, redirect, url_for, session
 from database import DBhabdler
+import hashlib
 import sys
 
 application = Flask(__name__)
+application.config["SECRET_KEY"] = "helloosp"
 
 DB = DBhabdler()
 
@@ -35,6 +37,25 @@ def reg_item():
 @application.route("/reg_reviews")
 def reg_review():
     return render_template("reg_reviews.html")
+
+@application.route("/login")
+def login():
+    return render_template("login.html")
+
+@application.route("/signup")
+def signup():
+    return render_template("signup.html")
+
+@application.route("/signup_post", methods=['POST'])
+def register_user():
+    data=request.form
+    pw=request.form['pw']
+    pw_hash = hashlib.sha256(pw.encode('utf-8')).hexdigest()    #id 중복 체크 필요
+    if DB.insert_user(data,pw_hash):
+        return render_template("login.html")
+    else:   # 중복 아이디 존재 시 플래시 메세지 띄움
+        flash("user id already exist!")
+        return render_template("signup.html")
 
 @application.route("/submit_item_post", methods=['POST'])
 def submit_item_post():
